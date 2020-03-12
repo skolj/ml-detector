@@ -5,10 +5,19 @@ from actions import submit
 from openpyxl import Workbook
 from urllib2 import urlopen
 from flask_sqlalchemy import SQLAlchemy
+import os
+
+SQLALCHEMY_DATABASE_URI = os.environ.get('SQLALCHEMY_DATABASE_URI', None)
+SECRET_KEY = os.environ.get('SECRET_KEY', None)
+SQLALCHEMY_TRACK_MODIFICATIONS = os.environ.get('SQLALCHEMY_TRACK_MODIFICATIONS', None)
 
 
 app = Flask(__name__)
-app.config.from_json('config.json')
+app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DATABASE_URI
+app.config['SECRET_KEY'] = SECRET_KEY
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = SQLALCHEMY_TRACK_MODIFICATIONS
+
+port = int(os.environ.get("PORT", 5000))
 
 db = SQLAlchemy(app)
 
@@ -136,4 +145,4 @@ def download():
 
 if __name__ == '__main__':
     import main
-    app.run()
+    app.run(host='0.0.0.0', port=port, debug=True)
