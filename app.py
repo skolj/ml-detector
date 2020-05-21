@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request, send_file, redirect, jsonify
+from flask_cors import CORS, cross_origin
 from forms import Input
 from utils import Results, extract_url, getDomainInfo
 from actions import submit
@@ -13,6 +14,8 @@ SQLALCHEMY_TRACK_MODIFICATIONS = os.environ.get('SQLALCHEMY_TRACK_MODIFICATIONS'
 
 
 app = Flask(__name__)
+cors = CORS(app)
+app.config['CORS_HEADERS'] = 'Content-Type'
 app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DATABASE_URI
 app.config['SECRET_KEY'] = SECRET_KEY
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = SQLALCHEMY_TRACK_MODIFICATIONS
@@ -31,6 +34,7 @@ class Store(db.Model):
         self.verdict = verdict
 
 @app.route('/test', methods=['POST'])
+@cross_origin()
 def test():
     url = request.json['url']   
     base_url = extract_url(url)
@@ -177,6 +181,7 @@ def about():
     return render_template('about.html', title='About')   
 
 @app.route('/download', methods=['POST'])
+@cross_origin()
 def download():
     wb = Workbook()
 
