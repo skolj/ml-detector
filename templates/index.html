@@ -3,7 +3,7 @@
 <form method="POST" action="">
   <div class="form-group my-4">
     <div class="row">
-      <div class="col-md-11">
+      <div class="col-md-9 col-sm-12 col-12 my-2">
         {% if form.url.errors %} {{ form.url(class="form-control is-invalid") }}
         <div class="invalid-feedback">
           {% for error in form.url.errors %}
@@ -13,8 +13,8 @@
         {% else %} {{ form.url(placeholder="Enter a URL to test",
         class="form-control") }} {% endif %}
       </div>
-      <div class="col-md-1">
-        {{ form.submit(class='btn btn-secondary px-4')}}
+      <div class="col-md-3 col-sm-12 col-12 my-sm-2 my-2">
+        {{ form.submit(class='btn btn-secondary px-4 btn-block')}}
       </div>
     </div>
   </div>
