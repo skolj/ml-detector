@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, send_file, redirect
+from flask import Flask, render_template, request, send_file, redirect, jsonify
 from forms import Input
 from utils import Results, extract_url, getDomainInfo
 from actions import submit
@@ -29,6 +29,73 @@ class Store(db.Model):
     def __init__(self, url, verdict):
         self.url = url
         self.verdict = verdict
+
+@app.route('/test', methods=['POST'])
+def test():
+    url = request.json['url']   
+    base_url = extract_url(url)
+    domain_info = getDomainInfo(base_url)['WhoisRecord']
+    useful_domain_info = {url: url}
+    empty = False
+
+    try:
+        del domain_info['registrant']['rawText']
+        domain_info['registrant']['street'] = domain_info['registrant'].pop('street1')
+
+        useful_domain_info = {
+            'Registrar Name': domain_info['registrarName'],
+            'Registrant Details': domain_info['registrant'],
+            'Creation Date': domain_info['createdDate'],
+            'Updation Date': domain_info['updatedDate'],
+            'Expiration Date': domain_info['expiresDate'],
+            'Domain Name': base_url
+        }
+
+
+    except KeyError as e:
+        if e.message == 'registrant':
+            print 'REGISTRANT-------------------------------------------'
+            useful_domain_info = {}
+            empty = True
+        elif e.message == 'street1':
+            print 'STREET-------------------------------------------'
+            useful_domain_info = {
+                'Registrar Name': domain_info['registrarName'],
+                'Registrant Details': domain_info['registrant'],
+                'Creation Date': domain_info['createdDate'],
+                'Updation Date': domain_info['updatedDate'],
+                'Expiration Date': domain_info['expiresDate'],
+                'Domain Name': base_url,
+            }
+            empty = False
+        else:
+            print('---------------ELSE------')
+            print e.message    
+    except Exception as e:
+        print('-----------EXCEPTION-------------')        
+        print(e.message)   
+
+    result = submit(url)
+    verdict = ''
+
+    if result == Results.SAFE:
+        verdict = 'SAFE'
+    elif result == Results.MALICIOUS:
+        verdict = 'MALICIOUS'
+    else:
+        verdict = 'MALWARE'
+
+    isSafe = False
+
+    if db.session.query(Store).filter(Store.url == base_url).count() == 0:
+        info = Store(base_url, verdict)
+        db.session.add(info)
+        db.session.commit()
+
+    if result == Results.SAFE:
+        isSafe = True
+   
+    return jsonify({'domain': useful_domain_info,'isSafe': isSafe, 'url': url})
        
 
 @app.route('/', methods=['GET', 'POST'])
